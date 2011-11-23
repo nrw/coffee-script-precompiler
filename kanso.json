@@ -1,0 +1,14 @@
+{
+  "name": "coffeescript-precompiler",
+  "version": "0.0.1",
+  "description": "compiles coffeescript to javascript on each push",
+  "dependencies": {
+    "couchtypes": null,
+    "modules": null
+  },
+
+  "postprocessors": {
+      "compile": "build/compile"
+  }
+
+}
