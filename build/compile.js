@@ -1,10 +1,11 @@
-var async, coffeescript, compileCoffee, logger, path, spawn, utils;
+var async, coffeescript, compileCoffee, logger, modules, path, spawn, utils;
 coffeescript = require("../coffee-script/lib/coffee-script/coffee-script");
 async = require("async");
 logger = require("kanso/logger");
 utils = require("kanso/utils");
 spawn = require("child_process").spawn;
 path = require("path");
+modules = require('kanso/modules');
 compileCoffee = function(project_path, filename, settings, callback) {
   var args, coffeec, err_out, js;
   logger.info("compiling", utils.relpath(filename, project_path));
@@ -27,6 +28,20 @@ compileCoffee = function(project_path, filename, settings, callback) {
     }
   });
 };
+/*
+  DOCSTRING FOR modules.add
+  
+  Add the module source to the document in the correct location for requiring
+  server-side, then add the path to the _modules property for use by the
+  modules plugin postprocessor (when creating the kanso.js attachment)
+  
+  Returns the updated document.
+  
+  @param {Object} doc
+  @param {String} path
+  @param {String} src
+  @returns {Object}
+*/
 module.exports = function(root, path, settings, doc, callback) {
   var paths;
   if (!settings.coffeescript || !settings.coffeescript.compile) {
@@ -44,10 +59,7 @@ module.exports = function(root, path, settings, doc, callback) {
       if (err) {
         return cb(err);
       }
-      doc._attachments[name] = {
-        content_type: "text/javascript",
-        data: new Buffer(js).toString("base64")
-      };
+      modules.add(doc, filename, new Buffer(js).toString("base64"));
       return cb();
     });
   }), function(err) {

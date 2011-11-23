@@ -4,6 +4,7 @@ logger = require("kanso/logger")
 utils = require("kanso/utils")
 spawn = require("child_process").spawn
 path = require("path")
+modules = require('kanso/modules')
 
 compileCoffee = (project_path, filename, settings, callback) ->
   logger.info "compiling", utils.relpath(filename, project_path)
@@ -33,6 +34,22 @@ compileCoffee = (project_path, filename, settings, callback) ->
 # the first argument of the callback is an optionall error
 # the second is the udpated doc object
 
+###
+  DOCSTRING FOR modules.add
+  
+  Add the module source to the document in the correct location for requiring
+  server-side, then add the path to the _modules property for use by the
+  modules plugin postprocessor (when creating the kanso.js attachment)
+  
+  Returns the updated document.
+  
+  @param {Object} doc
+  @param {String} path
+  @param {String} src
+  @returns {Object}
+###
+
+
 module.exports = (root, path, settings, doc, callback) ->
   return callback(null, doc)  if not settings.coffeescript or not settings.coffeescript.compile
   paths = settings.coffeescript.compile or []
@@ -42,10 +59,9 @@ module.exports = (root, path, settings, doc, callback) ->
     filename = utils.abspath(p, path)
     compileCoffee path, filename, settings, (err, js) ->
       return cb(err)  if err
-      doc._attachments[name] =
-        content_type: "text/javascript"
-        data: new Buffer(js).toString("base64")
-
+      modules.add(doc, filename, new Buffer(js).toString("base64"))
       cb()
   ), (err) ->
     callback err, doc
+
+
