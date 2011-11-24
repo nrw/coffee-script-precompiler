@@ -44,22 +44,25 @@ compileCoffee = function(project_path, filename, settings, callback) {
 */
 module.exports = function(root, path, settings, doc, callback) {
   var paths;
-  if (!settings.coffeescript || !settings.coffeescript.compile) {
+  if (!settings.coffeescript) {
     return callback(null, doc);
   }
-  paths = settings.coffeescript.compile || [];
+  if (!settings.coffeescript.modules && !settings.coffeescript.attachments) {
+    return callback(null, doc);
+  }
+  paths = settings.coffeescript.modules || [];
   if (!Array.isArray(paths)) {
     paths = [paths];
   }
   return async.forEach(paths, (function(p, cb) {
     var filename, name;
-    name = p.replace(/\.coffee$/, ".js");
+    name = p.replace(/\.coffee$/, "");
     filename = utils.abspath(p, path);
     return compileCoffee(path, filename, settings, function(err, js) {
       if (err) {
         return cb(err);
       }
-      modules.add(doc, filename, new Buffer(js).toString("base64"));
+      modules.add(doc, name, js.toString());
       return cb();
     });
   }), function(err) {

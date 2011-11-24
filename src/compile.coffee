@@ -51,15 +51,16 @@ compileCoffee = (project_path, filename, settings, callback) ->
 
 
 module.exports = (root, path, settings, doc, callback) ->
-  return callback(null, doc)  if not settings.coffeescript or not settings.coffeescript.compile
-  paths = settings.coffeescript.compile or []
+  return callback(null, doc) if not settings.coffeescript
+  return callback(null, doc) if not settings.coffeescript.modules and not settings.coffeescript.attachments
+  paths = settings.coffeescript.modules or []
   paths = [ paths ]  unless Array.isArray(paths)
   async.forEach paths, ((p, cb) ->
-    name = p.replace(/\.coffee$/, ".js")
+    name = p.replace(/\.coffee$/, "")
     filename = utils.abspath(p, path)
     compileCoffee path, filename, settings, (err, js) ->
       return cb(err)  if err
-      modules.add(doc, filename, new Buffer(js).toString("base64"))
+      modules.add(doc, name, js.toString())
       cb()
   ), (err) ->
     callback err, doc
