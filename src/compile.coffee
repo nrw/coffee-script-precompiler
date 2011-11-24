@@ -9,7 +9,7 @@ modules = require('kanso/modules')
 compileCoffee = (project_path, filename, settings, callback) ->
   logger.info "compiling", utils.relpath(filename, project_path)
   args = [ filename ]
-  args.unshift "--print" #  if settings.less.compress
+  args.unshift "--print"
   coffeec = spawn(__dirname + "/../coffee-script/bin/coffee", args)
   js = ""
   err_out = ""
@@ -25,35 +25,10 @@ compileCoffee = (project_path, filename, settings, callback) ->
     else
       callback new Error(err_out)
 
-# root {Boolean} whether the package is the main (top) package being built
-# (always true for postprocessors)
-# path {String} the fs path of the package directory
-# settings {Object} the values in kanso.json
-# doc {Object} the design doc being built
-# callback {Function} function to call after the processor is complete or on error
-# the first argument of the callback is an optionall error
-# the second is the udpated doc object
-
-###
-  DOCSTRING FOR modules.add
-  
-  Add the module source to the document in the correct location for requiring
-  server-side, then add the path to the _modules property for use by the
-  modules plugin postprocessor (when creating the kanso.js attachment)
-  
-  Returns the updated document.
-  
-  @param {Object} doc
-  @param {String} path
-  @param {String} src
-  @returns {Object}
-###
-
-
 module.exports = (root, path, settings, doc, callback) ->
-  return callback(null, doc) if not settings.coffeescript
-  return callback(null, doc) if not settings.coffeescript.modules and not settings.coffeescript.attachments
-  paths = settings.coffeescript.modules or []
+  return callback(null, doc) if not settings["coffee-script"]
+  return callback(null, doc) if not settings["coffee-script"]["modules"] and not settings["coffee-script"]["attachments"]
+  paths = settings["coffee-script"]["modules"] or []
   paths = [ paths ]  unless Array.isArray(paths)
   async.forEach paths, ((p, cb) ->
     name = p.replace(/\.coffee$/, "")

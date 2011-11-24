@@ -28,29 +28,15 @@ compileCoffee = function(project_path, filename, settings, callback) {
     }
   });
 };
-/*
-  DOCSTRING FOR modules.add
-  
-  Add the module source to the document in the correct location for requiring
-  server-side, then add the path to the _modules property for use by the
-  modules plugin postprocessor (when creating the kanso.js attachment)
-  
-  Returns the updated document.
-  
-  @param {Object} doc
-  @param {String} path
-  @param {String} src
-  @returns {Object}
-*/
 module.exports = function(root, path, settings, doc, callback) {
   var paths;
-  if (!settings.coffeescript) {
+  if (!settings["coffee-script"]) {
     return callback(null, doc);
   }
-  if (!settings.coffeescript.modules && !settings.coffeescript.attachments) {
+  if (!settings["coffee-script"]["modules"] && !settings["coffee-script"]["attachments"]) {
     return callback(null, doc);
   }
-  paths = settings.coffeescript.modules || [];
+  paths = settings["coffee-script"]["modules"] || [];
   if (!Array.isArray(paths)) {
     paths = [paths];
   }
