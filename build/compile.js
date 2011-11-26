@@ -45,14 +45,14 @@ module.exports = {
     return async.forEach(paths, (function(p, cb) {
       var pattern;
       pattern = /.*\.coffee/i;
-      return utils.find(p, pattern, function(err, data) {
+      //p = utils.abspath(p, path);
+      return utils.find(utils.abspath(p, path), pattern, function(err, data) {
         if (err) {
             return cb(err);
         }
-        async.forEach(data, (function(file, callback2) {
-          var filename, name;
-          name = file.replace(/\.coffee$/, "");
-          filename = utils.abspath(name, path);
+        async.forEach(data, (function(filename, callback2) {
+          var name;
+          name = utils.relpath(filename, path).replace(/\.coffee$/, "");
           return compileCoffee(path, filename, settings, function(err, js) {
             if (err) {
               return callback2(err);
