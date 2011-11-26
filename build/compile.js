@@ -46,21 +46,19 @@ module.exports = {
       var pattern;
       pattern = /.*\.coffee/i;
       return utils.find(p, pattern, function(err, data) {
-        var file, filename, name, _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = data.length; _i < _len; _i++) {
-          file = data[_i];
+        async.forEach(data, (function(file, callback2) {
+          var filename, name;
           name = file.replace(/\.coffee$/, "");
           filename = utils.abspath(name, path);
-          _results.push(compileCoffee(path, filename, settings, function(err, js) {
+          return compileCoffee(path, filename, settings, function(err, js) {
             if (err) {
-              return cb(err);
+              return callback2(err);
             }
             modules.add(doc, name, js.toString());
-            return cb();
-          }));
-        }
-        return _results;
+            return callback2();
+          });
+        }));
+        return cb();
       });
     }), function(err) {
       return callback(err, doc);

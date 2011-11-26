@@ -36,13 +36,15 @@ module.exports =
     async.forEach paths, ((p, cb) ->
       pattern = /.*\.coffee/i
       utils.find(p, pattern, (err, data) ->
-        for file in data
+        async.forEach data, ((file, callback2) ->
           name = file.replace(/\.coffee$/, "")
           filename = utils.abspath(name, path)
           compileCoffee path, filename, settings, (err, js) ->
-            return cb(err)  if err
+            return callback2(err)  if err
             modules.add(doc, name, js.toString())
-            cb()
+            callback2()
+          )
+        cb()
       )
     ), (err) ->
       callback err, doc
