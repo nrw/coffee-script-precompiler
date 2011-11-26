@@ -30,16 +30,19 @@ module.exports =
   run: (root, path, settings, doc, callback) ->
     return callback(null, doc) if not settings["coffee-script"]
     return callback(null, doc) if not settings["coffee-script"]["modules"] and not settings["coffee-script"]["attachments"]
+
     paths = settings["coffee-script"]["modules"] or []
     paths = [ paths ]  unless Array.isArray(paths)
     async.forEach paths, ((p, cb) ->
-      name = p.replace(/\.coffee$/, "")
-      filename = utils.abspath(p, path)
-      compileCoffee path, filename, settings, (err, js) ->
-        return cb(err)  if err
-        modules.add(doc, name, js.toString())
-        cb()
+      pattern = /.*\.coffee/i
+      utils.find(p, pattern, (err, data) ->
+        for file in data
+          name = file.replace(/\.coffee$/, "")
+          filename = utils.abspath(name, path)
+          compileCoffee path, filename, settings, (err, js) ->
+            return cb(err)  if err
+            modules.add(doc, name, js.toString())
+            cb()
+      )
     ), (err) ->
       callback err, doc
-
-

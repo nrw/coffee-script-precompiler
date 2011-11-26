@@ -28,30 +28,42 @@ compileCoffee = function(project_path, filename, settings, callback) {
     }
   });
 };
-module.exports = function(root, path, settings, doc, callback) {
-  var paths;
-  if (!settings["coffee-script"]) {
-    return callback(null, doc);
-  }
-  if (!settings["coffee-script"]["modules"] && !settings["coffee-script"]["attachments"]) {
-    return callback(null, doc);
-  }
-  paths = settings["coffee-script"]["modules"] || [];
-  if (!Array.isArray(paths)) {
-    paths = [paths];
-  }
-  return async.forEach(paths, (function(p, cb) {
-    var filename, name;
-    name = p.replace(/\.coffee$/, "");
-    filename = utils.abspath(p, path);
-    return compileCoffee(path, filename, settings, function(err, js) {
-      if (err) {
-        return cb(err);
-      }
-      modules.add(doc, name, js.toString());
-      return cb();
+module.exports = {
+  before: 'properties',
+  run: function(root, path, settings, doc, callback) {
+    var paths;
+    if (!settings["coffee-script"]) {
+      return callback(null, doc);
+    }
+    if (!settings["coffee-script"]["modules"] && !settings["coffee-script"]["attachments"]) {
+      return callback(null, doc);
+    }
+    paths = settings["coffee-script"]["modules"] || [];
+    if (!Array.isArray(paths)) {
+      paths = [paths];
+    }
+    return async.forEach(paths, (function(p, cb) {
+      var pattern;
+      pattern = /.*\.coffee/i;
+      return utils.find(p, pattern, function(err, data) {
+        var file, filename, name, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          file = data[_i];
+          name = file.replace(/\.coffee$/, "");
+          filename = utils.abspath(name, path);
+          _results.push(compileCoffee(path, filename, settings, function(err, js) {
+            if (err) {
+              return cb(err);
+            }
+            modules.add(doc, name, js.toString());
+            return cb();
+          }));
+        }
+        return _results;
+      });
+    }), function(err) {
+      return callback(err, doc);
     });
-  }), function(err) {
-    return callback(err, doc);
-  });
+  }
 };
