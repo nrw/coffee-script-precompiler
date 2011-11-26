@@ -46,6 +46,9 @@ module.exports = {
       var pattern;
       pattern = /.*\.coffee/i;
       return utils.find(p, pattern, function(err, data) {
+        if (err) {
+            return cb(err);
+        }
         async.forEach(data, (function(file, callback2) {
           var filename, name;
           name = file.replace(/\.coffee$/, "");
@@ -57,8 +60,8 @@ module.exports = {
             modules.add(doc, name, js.toString());
             return callback2();
           });
-        }));
-        return cb();
+        }),
+        cb);
       });
     }), function(err) {
       return callback(err, doc);
