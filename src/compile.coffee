@@ -4,7 +4,7 @@ logger = require("kanso/logger")
 utils = require("kanso/utils")
 spawn = require("child_process").spawn
 path = require("path")
-modules = require('kanso/modules')
+modules = require("kanso/modules")
 
 compileCoffee = (project_path, filename, settings, callback) ->
   logger.info "compiling", utils.relpath(filename, project_path)
@@ -26,25 +26,22 @@ compileCoffee = (project_path, filename, settings, callback) ->
       callback new Error(err_out)
 
 module.exports =
-  before: 'properties'
+  before: "properties"
   run: (root, path, settings, doc, callback) ->
-    return callback(null, doc) if not settings["coffee-script"]
-    return callback(null, doc) if not settings["coffee-script"]["modules"] and not settings["coffee-script"]["attachments"]
-
+    return callback(null, doc)  unless settings["coffee-script"]
+    return callback(null, doc)  if not settings["coffee-script"]["modules"] and not settings["coffee-script"]["attachments"]
     paths = settings["coffee-script"]["modules"] or []
     paths = [ paths ]  unless Array.isArray(paths)
     async.forEach paths, ((p, cb) ->
       pattern = /.*\.coffee/i
-      utils.find(p, pattern, (err, data) ->
-        async.forEach data, ((file, callback2) ->
-          name = file.replace(/\.coffee$/, "")
-          filename = utils.abspath(name, path)
+      utils.find utils.abspath(p, path), pattern, (err, data) ->
+        return cb(err)  if err
+        async.forEach data, ((filename, callback2) ->
+          name = utils.relpath(filename, path).replace(/\.coffee$/, "")
           compileCoffee path, filename, settings, (err, js) ->
             return callback2(err)  if err
-            modules.add(doc, name, js.toString())
+            modules.add doc, name, js.toString()
             callback2()
-          )
-        cb()
-      )
+        ), cb
     ), (err) ->
       callback err, doc

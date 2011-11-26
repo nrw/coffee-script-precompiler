@@ -5,7 +5,7 @@ logger = require("kanso/logger");
 utils = require("kanso/utils");
 spawn = require("child_process").spawn;
 path = require("path");
-modules = require('kanso/modules');
+modules = require("kanso/modules");
 compileCoffee = function(project_path, filename, settings, callback) {
   var args, coffeec, err_out, js;
   logger.info("compiling", utils.relpath(filename, project_path));
@@ -29,7 +29,7 @@ compileCoffee = function(project_path, filename, settings, callback) {
   });
 };
 module.exports = {
-  before: 'properties',
+  before: "properties",
   run: function(root, path, settings, doc, callback) {
     var paths;
     if (!settings["coffee-script"]) {
@@ -45,12 +45,11 @@ module.exports = {
     return async.forEach(paths, (function(p, cb) {
       var pattern;
       pattern = /.*\.coffee/i;
-      //p = utils.abspath(p, path);
       return utils.find(utils.abspath(p, path), pattern, function(err, data) {
         if (err) {
-            return cb(err);
+          return cb(err);
         }
-        async.forEach(data, (function(filename, callback2) {
+        return async.forEach(data, (function(filename, callback2) {
           var name;
           name = utils.relpath(filename, path).replace(/\.coffee$/, "");
           return compileCoffee(path, filename, settings, function(err, js) {
@@ -60,8 +59,7 @@ module.exports = {
             modules.add(doc, name, js.toString());
             return callback2();
           });
-        }),
-        cb);
+        }), cb);
       });
     }), function(err) {
       return callback(err, doc);
