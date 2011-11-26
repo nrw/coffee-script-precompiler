@@ -1,0 +1,39 @@
+{
+    "name": "cstest",
+    "version": "0.0.1",
+    "description": "My new CouchApp",
+    "load": "lib/app",
+    "modules": "lib",
+    "attachments": "static",
+    "dust": {
+        "templates": "templates"
+    },
+    "duality": {
+        "base_template": "base.html"
+    },
+    "coffee-script": {
+        "modules": [
+            "lib/app.coffee",
+            "lib/events.coffee",
+            "lib/filters.coffee",
+            "lib/lists.coffee",
+            "lib/rewrites.coffee",
+            "lib/shows.coffee",
+            "lib/types.coffee",
+            "lib/updates.coffee",
+            "lib/validate.coffee",
+            "lib/views.coffee"
+        ]
+    },
+    "dependencies": {
+        "modules": null,
+        "properties": null,
+        "attachments": null,
+        "settings": null,
+        "duality": null,
+        "dust": null,
+        "duality-dust": null,
+        "couchtypes": null,
+        "coffee-script-precompiler": null
+    }
+}
