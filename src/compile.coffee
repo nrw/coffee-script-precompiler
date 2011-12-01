@@ -33,7 +33,7 @@ module.exports =
     paths = settings["coffee-script"]["modules"] or []
     paths = [ paths ]  unless Array.isArray(paths)
     async.forEach paths, ((p, cb) ->
-      pattern = /.*\.coffee/i
+      pattern = /.*\.coffee$/i
       utils.find utils.abspath(p, path), pattern, (err, data) ->
         return cb(err)  if err
         async.forEach data, ((filename, callback2) ->

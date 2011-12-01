@@ -44,7 +44,7 @@ module.exports = {
     }
     return async.forEach(paths, (function(p, cb) {
       var pattern;
-      pattern = /.*\.coffee/i;
+      pattern = /.*\.coffee$/i;
       return utils.find(utils.abspath(p, path), pattern, function(err, data) {
         if (err) {
           return cb(err);
