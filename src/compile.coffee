@@ -44,4 +44,49 @@ module.exports =
             callback2()
         ), cb
     ), (err) ->
-      callback err, doc
+      
+      attach_paths = settings["coffee-script"]["attachments"] or []
+      attach_paths = [ attach_paths ] unless Array.isArray(attach_paths)
+
+      async.forEach attach_paths, ((p, cb) ->
+        pattern = /.*\.coffee$/i
+        utils.find utils.abspath(p, path), pattern, (err, data) ->
+          return cb(err)  if err
+          async.forEach data, ((filename, callback2) ->
+            name = utils.relpath(filename, path).replace(/\.coffee$/, ".js")
+            compileCoffee path, filename, settings, (err, js) ->
+              return callback2(err)  if err
+              doc._attachments[name] = 
+                content_type: "application/javascript"
+                data: new Buffer(js).toString("base64")
+              callback2()
+            ), cb
+        ), (err) ->
+          callback err, doc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

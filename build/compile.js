@@ -62,7 +62,36 @@ module.exports = {
         }), cb);
       });
     }), function(err) {
-      return callback(err, doc);
+      var attach_paths;
+      attach_paths = settings["coffee-script"]["attachments"] || [];
+      if (!Array.isArray(attach_paths)) {
+        attach_paths = [attach_paths];
+      }
+      return async.forEach(attach_paths, (function(p, cb) {
+        var pattern;
+        pattern = /.*\.coffee$/i;
+        return utils.find(utils.abspath(p, path), pattern, function(err, data) {
+          if (err) {
+            return cb(err);
+          }
+          return async.forEach(data, (function(filename, callback2) {
+            var name;
+            name = utils.relpath(filename, path).replace(/\.coffee$/, ".js");
+            return compileCoffee(path, filename, settings, function(err, js) {
+              if (err) {
+                return callback2(err);
+              }
+              doc._attachments[name] = {
+                content_type: "application/javascript",
+                data: new Buffer(js).toString("base64")
+              };
+              return callback2();
+            });
+          }), cb);
+        });
+      }), function(err) {
+        return callback(err, doc);
+      });
     });
   }
 };
