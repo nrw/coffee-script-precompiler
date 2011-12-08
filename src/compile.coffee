@@ -63,30 +63,3 @@ module.exports =
             ), cb
         ), (err) ->
           callback err, doc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
