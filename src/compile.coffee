@@ -1,4 +1,3 @@
-coffeescript = require("../coffee-script/lib/coffee-script/coffee-script")
 async = require("async")
 logger = require("kanso/logger")
 utils = require("kanso/utils")
@@ -10,7 +9,8 @@ compileCoffee = (project_path, filename, settings, callback) ->
   logger.info "compiling", utils.relpath(filename, project_path)
   args = [ filename ]
   args.unshift "--print"
-  coffeec = spawn(__dirname + "/../coffee-script/bin/coffee", args)
+  # console.log __dirname
+  coffeec = spawn(__dirname + "/../../coffee-script/coffee-script/bin/coffee", args)
   js = ""
   err_out = ""
   coffeec.stdout.on "data", (data) ->
@@ -20,6 +20,7 @@ compileCoffee = (project_path, filename, settings, callback) ->
     err_out += data
 
   coffeec.on "exit", (code) ->
+    # console.log js
     if code is 0
       callback null, js
     else

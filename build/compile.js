@@ -1,5 +1,4 @@
-var async, coffeescript, compileCoffee, logger, modules, path, spawn, utils;
-coffeescript = require("../coffee-script/lib/coffee-script/coffee-script");
+var async, compileCoffee, logger, modules, path, spawn, utils;
 async = require("async");
 logger = require("kanso/logger");
 utils = require("kanso/utils");
@@ -11,7 +10,7 @@ compileCoffee = function(project_path, filename, settings, callback) {
   logger.info("compiling", utils.relpath(filename, project_path));
   args = [filename];
   args.unshift("--print");
-  coffeec = spawn(__dirname + "/../coffee-script/bin/coffee", args);
+  coffeec = spawn(__dirname + "/../../coffee-script/coffee-script/bin/coffee", args);
   js = "";
   err_out = "";
   coffeec.stdout.on("data", function(data) {
