@@ -1,11 +1,81 @@
-var async, compileCoffee, logger, modules, path, spawn, utils;
+var async, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, logger, modules, path, spawn, utils;
 async = require("async");
 logger = require("kanso/logger");
 utils = require("kanso/utils");
 spawn = require("child_process").spawn;
 path = require("path");
 modules = require("kanso/modules");
-compileCoffee = function(project_path, filename, settings, callback) {
+module.exports = {
+  before: "properties",
+  run: function(root, path, settings, doc, callback) {
+    var attach_paths, module_paths;
+    if (!settings["coffee-script"]) {
+      return callback(null, doc);
+    }
+    if (!settings["coffee-script"]["modules"] && !settings["coffee-script"]["attachments"]) {
+      return callback(null, doc);
+    }
+    module_paths = settings["coffee-script"]["modules"] || [];
+    if (!Array.isArray(module_paths)) {
+      module_paths = [module_paths];
+    }
+    attach_paths = settings["coffee-script"]["attachments"] || [];
+    if (!Array.isArray(attach_paths)) {
+      attach_paths = [attach_paths];
+    }
+    return async.forEach(module_paths, compile_modules, function(err) {
+      return async.forEach(attach_paths, compile_attachments, function(err) {
+        return callback(err, doc);
+      });
+    });
+  }
+};
+compile_modules = function(paths, callback) {
+  var pattern;
+  pattern = /.*\.coffee$/i;
+  return utils.find(utils.abspath(paths, path), pattern, function(err, data) {
+    if (err) {
+      return callback(err);
+    }
+    return async.forEach(data, compile_module, callback);
+  });
+};
+compile_module = function(filename, callback) {
+  var name;
+  name = utils.relpath(filename, path).replace(/\.coffee$/, "");
+  return compile_coffee(path, filename, function(err, js) {
+    if (err) {
+      return callback(err);
+    }
+    modules.add(doc, name, js.toString());
+    return callback();
+  });
+};
+compile_attachments = function(paths, callback) {
+  var pattern;
+  pattern = /.*\.coffee$/i;
+  return utils.find(utils.abspath(paths, path), pattern, function(err, data) {
+    if (err) {
+      return callback(err);
+    }
+    return async.forEach(data, compile_attachment, callback);
+  });
+};
+compile_attachment = function(filename, callback) {
+  var name;
+  name = utils.relpath(filename, path).replace(/\.coffee$/, ".js");
+  return compile_coffee(path, filename, function(err, js) {
+    if (err) {
+      return callback(err);
+    }
+    doc._attachments[name] = {
+      content_type: "application/javascript",
+      data: new Buffer(js).toString("base64")
+    };
+    return callback();
+  });
+};
+compile_coffee = function(project_path, filename, callback) {
   var args, coffeec, err_out, js;
   logger.info("compiling", utils.relpath(filename, project_path));
   args = [filename];
@@ -26,71 +96,4 @@ compileCoffee = function(project_path, filename, settings, callback) {
       return callback(new Error(err_out));
     }
   });
-};
-module.exports = {
-  before: "properties",
-  run: function(root, path, settings, doc, callback) {
-    var paths;
-    if (!settings["coffee-script"]) {
-      return callback(null, doc);
-    }
-    if (!settings["coffee-script"]["modules"] && !settings["coffee-script"]["attachments"]) {
-      return callback(null, doc);
-    }
-    paths = settings["coffee-script"]["modules"] || [];
-    if (!Array.isArray(paths)) {
-      paths = [paths];
-    }
-    return async.forEach(paths, (function(p, cb) {
-      var pattern;
-      pattern = /.*\.coffee$/i;
-      return utils.find(utils.abspath(p, path), pattern, function(err, data) {
-        if (err) {
-          return cb(err);
-        }
-        return async.forEach(data, (function(filename, callback2) {
-          var name;
-          name = utils.relpath(filename, path).replace(/\.coffee$/, "");
-          return compileCoffee(path, filename, settings, function(err, js) {
-            if (err) {
-              return callback2(err);
-            }
-            modules.add(doc, name, js.toString());
-            return callback2();
-          });
-        }), cb);
-      });
-    }), function(err) {
-      var attach_paths;
-      attach_paths = settings["coffee-script"]["attachments"] || [];
-      if (!Array.isArray(attach_paths)) {
-        attach_paths = [attach_paths];
-      }
-      return async.forEach(attach_paths, (function(p, cb) {
-        var pattern;
-        pattern = /.*\.coffee$/i;
-        return utils.find(utils.abspath(p, path), pattern, function(err, data) {
-          if (err) {
-            return cb(err);
-          }
-          return async.forEach(data, (function(filename, callback2) {
-            var name;
-            name = utils.relpath(filename, path).replace(/\.coffee$/, ".js");
-            return compileCoffee(path, filename, settings, function(err, js) {
-              if (err) {
-                return callback2(err);
-              }
-              doc._attachments[name] = {
-                content_type: "application/javascript",
-                data: new Buffer(js).toString("base64")
-              };
-              return callback2();
-            });
-          }), cb);
-        });
-      }), function(err) {
-        return callback(err, doc);
-      });
-    });
-  }
 };
