@@ -8,7 +8,7 @@ modules = require("kanso/modules");
 module.exports = {
   before: "properties",
   run: function(root, path, settings, doc, callback) {
-    var attach_paths, module_paths;
+    var apply_compile_attachments, apply_compile_modules, attach_paths, module_paths;
     if (!settings["coffee-script"]) {
       return callback(null, doc);
     }
@@ -23,24 +23,26 @@ module.exports = {
     if (!Array.isArray(attach_paths)) {
       attach_paths = [attach_paths];
     }
-    return async.forEach(module_paths, compile_modules, function(err) {
-      return async.forEach(attach_paths, compile_attachments, function(err) {
-        return callback(err, doc);
-      });
+    apply_compile_modules = async.apply(compile_modules, doc, path);
+    apply_compile_attachments = async.apply(compile_attachments, doc, path);
+    return async.parallel([async.apply(async.forEach, module_paths, apply_compile_modules), async.apply(async.forEach, attach_paths, apply_compile_attachments)], function(err) {
+      return callback(err, doc);
     });
   }
 };
-compile_modules = function(paths, callback) {
+compile_modules = function(doc, path, paths, callback) {
   var pattern;
   pattern = /.*\.coffee$/i;
   return utils.find(utils.abspath(paths, path), pattern, function(err, data) {
+    var apply_compile_module;
     if (err) {
       return callback(err);
     }
-    return async.forEach(data, compile_module, callback);
+    apply_compile_module = async.apply(compile_module, doc, path);
+    return async.forEach(data, apply_compile_module, callback);
   });
 };
-compile_module = function(filename, callback) {
+compile_module = function(doc, path, filename, callback) {
   var name;
   name = utils.relpath(filename, path).replace(/\.coffee$/, "");
   return compile_coffee(path, filename, function(err, js) {
@@ -51,17 +53,19 @@ compile_module = function(filename, callback) {
     return callback();
   });
 };
-compile_attachments = function(paths, callback) {
+compile_attachments = function(doc, path, paths, callback) {
   var pattern;
   pattern = /.*\.coffee$/i;
   return utils.find(utils.abspath(paths, path), pattern, function(err, data) {
+    var apply_compile_attachment;
     if (err) {
       return callback(err);
     }
-    return async.forEach(data, compile_attachment, callback);
+    apply_compile_attachment = async.apply(compile_attachment, doc, path);
+    return async.forEach(data, apply_compile_attachment, callback);
   });
 };
-compile_attachment = function(filename, callback) {
+compile_attachment = function(doc, path, filename, callback) {
   var name;
   name = utils.relpath(filename, path).replace(/\.coffee$/, ".js");
   return compile_coffee(path, filename, function(err, js) {

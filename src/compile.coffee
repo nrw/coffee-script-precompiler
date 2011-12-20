@@ -16,31 +16,37 @@ module.exports =
     
     attach_paths = settings["coffee-script"]["attachments"] or []
     attach_paths = [ attach_paths ] unless Array.isArray(attach_paths)
+    
+    apply_compile_modules = async.apply(compile_modules, doc, path)
+    apply_compile_attachments = async.apply(compile_attachments, doc, path)
 
-    async.forEach module_paths, compile_modules, (err) ->
-      async.forEach attach_paths, compile_attachments, (err) ->
-        callback err, doc
+    async.parallel [
+      async.apply(async.forEach, module_paths, apply_compile_modules),
+      async.apply(async.forEach, attach_paths, apply_compile_attachments)
+    ], (err) -> callback err, doc
 
-compile_modules = (paths, callback) ->
+compile_modules = (doc, path, paths, callback) ->
   pattern = /.*\.coffee$/i
   utils.find utils.abspath(paths, path), pattern, (err, data) ->
-    return callback(err)  if err
-    async.forEach data, compile_module, callback
+    return callback(err)  if err 
+    apply_compile_module = async.apply(compile_module, doc, path)
+    async.forEach data, apply_compile_module, callback
 
-compile_module = (filename, callback) ->
+compile_module = (doc, path, filename, callback) ->
   name = utils.relpath(filename, path).replace(/\.coffee$/, "")
   compile_coffee path, filename, (err, js) ->
     return callback(err)  if err
     modules.add doc, name, js.toString()
     callback()
 
-compile_attachments = (paths, callback) ->
+compile_attachments = (doc, path, paths, callback) ->
   pattern = /.*\.coffee$/i
   utils.find utils.abspath(paths, path), pattern, (err, data) ->
     return callback(err)  if err
-    async.forEach data, compile_attachment, callback
+    apply_compile_attachment = async.apply(compile_attachment, doc, path)
+    async.forEach data, apply_compile_attachment, callback
 
-compile_attachment = (filename, callback) ->
+compile_attachment = (doc, path, filename, callback) ->
   name = utils.relpath(filename, path).replace(/\.coffee$/, ".js")
   compile_coffee path, filename, (err, js) ->
     return callback(err)  if err
@@ -51,7 +57,7 @@ compile_attachment = (filename, callback) ->
 
 compile_coffee = (project_path, filename, callback) ->
   logger.info "compiling", utils.relpath(filename, project_path)
-  
+
   args = [ filename ]
   args.unshift "--print"
   coffeec = spawn(__dirname + "/../../coffee-script/coffee-script/bin/coffee", args)
@@ -70,6 +76,3 @@ compile_coffee = (project_path, filename, callback) ->
       callback null, js
     else
       callback new Error(err_out)
-
-
-
