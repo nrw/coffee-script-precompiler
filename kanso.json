@@ -4,9 +4,7 @@
     "categories": ["build-tools"],
     "description": "Compiles CoffeeScript modules and attachments to javascript on each push",
     "dependencies": {
-        "couchtypes": null,
         "modules": null,
-        "settings": null,
         "coffee-script": null
     },
     "preprocessors": {
