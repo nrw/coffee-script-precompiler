@@ -1,6 +1,6 @@
 {
     "name": "coffee-script-precompiler",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "categories": ["build-tools"],
     "description": "Compiles CoffeeScript modules and attachments to javascript on each push",
     "preprocessors": {
