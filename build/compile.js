@@ -1,10 +1,11 @@
-var async, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, logger, modules, path, spawn, utils;
+var async, coffee, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, logger, modules, path, spawn, utils;
 async = require("async");
-logger = require("kanso/logger");
-utils = require("kanso/utils");
+logger = require("kanso/lib/logger");
+utils = require("kanso/lib/utils");
 spawn = require("child_process").spawn;
 path = require("path");
-modules = require("kanso/modules");
+modules = require("kanso-utils/modules");
+coffee = require("coffee-script/lib/coffee-script/coffee-script");
 module.exports = {
   before: "properties",
   run: function(root, path, settings, doc, callback) {
@@ -80,24 +81,8 @@ compile_attachment = function(doc, path, filename, callback) {
   });
 };
 compile_coffee = function(project_path, filename, callback) {
-  var args, coffeec, err_out, js;
+  var c;
   logger.info("compiling", utils.relpath(filename, project_path));
-  args = [filename];
-  args.unshift("--print");
-  coffeec = spawn(__dirname + "/../../coffee-script/coffee-script/bin/coffee", args);
-  js = "";
-  err_out = "";
-  coffeec.stdout.on("data", function(data) {
-    return js += data;
-  });
-  coffeec.stderr.on("data", function(data) {
-    return err_out += data;
-  });
-  return coffeec.on("exit", function(code) {
-    if (code === 0) {
-      return callback(null, js);
-    } else {
-      return callback(new Error(err_out));
-    }
-  });
+  c = coffee.compile(fs.readFileSync(filename, 'utf8'));
+  return callback(null, c);
 };

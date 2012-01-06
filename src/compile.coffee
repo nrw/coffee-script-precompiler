@@ -1,9 +1,10 @@
 async = require("async")
-logger = require("kanso/logger")
-utils = require("kanso/utils")
+logger = require("kanso/lib/logger")
+utils = require("kanso/lib/utils")
 spawn = require("child_process").spawn
 path = require("path")
-modules = require("kanso/modules")
+modules = require("kanso-utils/modules")
+coffee = require("coffee-script/lib/coffee-script/coffee-script")
 
 module.exports =
   before: "properties"
@@ -58,21 +59,5 @@ compile_attachment = (doc, path, filename, callback) ->
 compile_coffee = (project_path, filename, callback) ->
   logger.info "compiling", utils.relpath(filename, project_path)
 
-  args = [ filename ]
-  args.unshift "--print"
-  coffeec = spawn(__dirname + "/../../coffee-script/coffee-script/bin/coffee", args)
-  
-  js = ""
-  err_out = ""
-  
-  coffeec.stdout.on "data", (data) ->
-    js += data
-
-  coffeec.stderr.on "data", (data) ->
-    err_out += data
-
-  coffeec.on "exit", (code) ->
-    if code is 0
-      callback null, js
-    else
-      callback new Error(err_out)
+  c = coffee.compile fs.readFileSync filename, 'utf8'
+  callback null, c

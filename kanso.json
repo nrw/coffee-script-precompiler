@@ -3,9 +3,6 @@
     "version": "0.0.8",
     "categories": ["build-tools"],
     "description": "Compiles CoffeeScript modules and attachments to javascript on each push",
-    "dependencies": {
-        "coffee-script": null
-    },
     "preprocessors": {
         "compile": "build/compile"
     }
