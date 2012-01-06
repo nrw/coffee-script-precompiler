@@ -1,7 +1,6 @@
-var async, coffee, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, logger, modules, path, spawn, utils;
+var async, coffee, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, modules, path, spawn, utils;
 async = require("async");
-logger = require("kanso/lib/logger");
-utils = require("kanso/lib/utils");
+utils = require("kanso-utils/utils");
 spawn = require("child_process").spawn;
 path = require("path");
 modules = require("kanso-utils/modules");
@@ -82,7 +81,7 @@ compile_attachment = function(doc, path, filename, callback) {
 };
 compile_coffee = function(project_path, filename, callback) {
   var c;
-  logger.info("compiling", utils.relpath(filename, project_path));
+  console.log("Compiling " + utils.relpath(filename, project_path));
   c = coffee.compile(fs.readFileSync(filename, 'utf8'));
   return callback(null, c);
 };

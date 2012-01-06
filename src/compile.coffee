@@ -1,6 +1,5 @@
 async = require("async")
-logger = require("kanso/lib/logger")
-utils = require("kanso/lib/utils")
+utils = require("kanso-utils/utils")
 spawn = require("child_process").spawn
 path = require("path")
 modules = require("kanso-utils/modules")
@@ -57,7 +56,7 @@ compile_attachment = (doc, path, filename, callback) ->
     callback()
 
 compile_coffee = (project_path, filename, callback) ->
-  logger.info "compiling", utils.relpath(filename, project_path)
+  console.log "Compiling " + utils.relpath(filename, project_path)
 
   c = coffee.compile fs.readFileSync filename, 'utf8'
   callback null, c
