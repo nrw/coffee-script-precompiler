@@ -3,6 +3,7 @@ utils = require("kanso-utils/utils")
 spawn = require("child_process").spawn
 path = require("path")
 modules = require("kanso-utils/modules")
+attachments = require("kanso-utils/attachments")
 coffee = require("coffee-script/lib/coffee-script/coffee-script")
 
 module.exports =
@@ -50,9 +51,7 @@ compile_attachment = (doc, path, filename, callback) ->
   name = utils.relpath(filename, path).replace(/\.coffee$/, ".js")
   compile_coffee path, filename, (err, js) ->
     return callback(err)  if err
-    doc._attachments[name] = 
-      content_type: "application/javascript"
-      data: new Buffer(js).toString("base64")
+    attachments.add doc, name, name, js.toString()
     callback()
 
 compile_coffee = (project_path, filename, callback) ->
