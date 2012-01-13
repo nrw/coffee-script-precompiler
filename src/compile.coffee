@@ -51,7 +51,7 @@ compile_attachment = (doc, path, filename, callback) ->
   name = utils.relpath(filename, path).replace(/\.coffee$/, ".js")
   compile_coffee path, filename, (err, js) ->
     return callback(err)  if err
-    attachments.add(doc, name, name, js.toString()
+    attachments.add doc, name, name, js.toString()
     callback()
 
 compile_coffee = (project_path, filename, callback) ->
