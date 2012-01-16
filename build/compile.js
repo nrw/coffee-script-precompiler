@@ -1,9 +1,10 @@
-var async, coffee, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, modules, path, spawn, utils;
+var async, attachments, coffee, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, modules, path, spawn, utils;
 async = require("async");
 utils = require("kanso-utils/utils");
 spawn = require("child_process").spawn;
 path = require("path");
 modules = require("kanso-utils/modules");
+attachments = require("kanso-utils/attachments");
 coffee = require("coffee-script/lib/coffee-script/coffee-script");
 module.exports = {
   before: "properties",
@@ -72,10 +73,7 @@ compile_attachment = function(doc, path, filename, callback) {
     if (err) {
       return callback(err);
     }
-    doc._attachments[name] = {
-      content_type: "application/javascript",
-      data: new Buffer(js).toString("base64")
-    };
+    attachments.add(doc, name, name, new Buffer(js).toString("base64"));
     return callback();
   });
 };
