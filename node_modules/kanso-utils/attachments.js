@@ -20,6 +20,9 @@ var utils = require('./utils'),
  */
 
 exports.add = function (doc, ddoc_path, original_path, content) {
+    if (!(content instanceof Buffer)) {
+        content = new Buffer(content);
+    }
     if (!doc._attachments) {
         doc._attachments = {};
     }
