@@ -23,6 +23,9 @@
             "lib/updates.coffee",
             "lib/validate.coffee",
             "lib/views.coffee"
+        ],
+        "attachments": [
+            "static/js/test.coffee"
         ]
     },
     "dependencies": {
