@@ -1,61 +1,56 @@
-async = require("async")
-utils = require("kanso-utils/utils")
-spawn = require("child_process").spawn
-path = require("path")
-modules = require("kanso-utils/modules")
-attachments = require("kanso-utils/attachments")
-coffee = require("coffee-script/lib/coffee-script/coffee-script")
-
 module.exports =
-  before: "properties"
+  before: "modules"
   run: (root, path, settings, doc, callback) ->
-    return callback(null, doc)  unless settings["coffee-script"]
-    return callback(null, doc)  if not settings["coffee-script"]["modules"] and not settings["coffee-script"]["attachments"]
 
-    module_paths = settings["coffee-script"]["modules"] or []
-    module_paths = [ module_paths ]  unless Array.isArray(module_paths)
-    
-    attach_paths = settings["coffee-script"]["attachments"] or []
-    attach_paths = [ attach_paths ] unless Array.isArray(attach_paths)
-    
-    apply_compile_modules = async.apply(compile_modules, doc, path)
-    apply_compile_attachments = async.apply(compile_attachments, doc, path)
+    modulesPaths = settings["coffee-script"]?["modules"]
+    attachmentsPaths = settings["coffee-script"]?["attachments"]
 
-    async.parallel [
-      async.apply(async.forEach, module_paths, apply_compile_modules),
-      async.apply(async.forEach, attach_paths, apply_compile_attachments)
-    ], (err) -> callback err, doc
+    # Check that the settings are valid
+    unless modulesPaths? or attachmentsPaths?
+      console.log "Coffee script precompiler must have either a modules or an attachment setting"
+      return callback(null, doc)
 
-compile_modules = (doc, path, paths, callback) ->
-  pattern = /.*\.coffee$/i
-  utils.find utils.abspath(paths, path), pattern, (err, data) ->
-    return callback(err)  if err 
-    apply_compile_module = async.apply(compile_module, doc, path)
-    async.forEach data, apply_compile_module, callback
+    modulesPaths ?= []
+    attachmentsPaths ?= []
 
-compile_module = (doc, path, filename, callback) ->
-  name = utils.relpath(filename, path).replace(/\.coffee$/, "")
-  compile_coffee path, filename, (err, js) ->
-    return callback(err)  if err
-    modules.add doc, name, js.toString()
-    callback()
+    # Pull in the required libraries    
+    async = require("async")
+    utils = require("kanso-utils/utils")
+    precompiler = require("kanso-precompiler-base")
+    coffee = require("coffee-script")
 
-compile_attachments = (doc, path, paths, callback) ->
-  pattern = /.*\.coffee$/i
-  utils.find utils.abspath(paths, path), pattern, (err, data) ->
-    return callback(err)  if err
-    apply_compile_attachment = async.apply(compile_attachment, doc, path)
-    async.forEach data, apply_compile_attachment, callback
+    # Specify the regular expression patterns that identify coffee files 
+    file_pattern = /.*\.coffee$/i
+    extension_pattern = /\.coffee$/ 
 
-compile_attachment = (doc, path, filename, callback) ->
-  name = utils.relpath(filename, path).replace(/\.coffee$/, ".js")
-  compile_coffee path, filename, (err, js) ->
-    return callback(err)  if err
-    attachments.add doc, name, name, new Buffer(js).toString("base64")
-    callback()
+    # Compile a coffeescript file and attach it to the design document      
+    compileAttachment = (filename, callback) ->
+      console.log("Compiling attachment")
+      js = coffee.compile(fs.readFileSync filename, 'utf8')
+      name = utils.relpath(filename, path).replace(extension_pattern, ".js")
+      precompiler.addAttachment(doc, name, filename,js)
+      callback(null, doc)
 
-compile_coffee = (project_path, filename, callback) ->
-  console.log "Compiling " + utils.relpath(filename, project_path)
+    # Compile a coffeescript file and add it as a CommonJS module to the design document      
+    compileModule = (filename, callback) ->
+      console.log("Compiling module")
+      js = coffee.compile(fs.readFileSync filename, 'utf8')
+      name = utils.relpath(filename, path).replace(extension_pattern, "")
+      precompiler.addModule(doc, name, filename, js)
+      callback(null, doc)
 
-  c = coffee.compile fs.readFileSync filename, 'utf8'
-  callback null, c
+    console.log "Running coffee-script pre-compiler"
+
+    console.dir()
+
+    # Extract the module and attachment paths from the settings
+    modules = precompiler.normalizePaths(settings["coffee-script"]["modules"], path)
+    attachments = precompiler.normalizePaths(attachmentsPaths, path)
+
+    # Create continuations for the functions that process whole folders of modules and attachments
+    processModules = async.apply(precompiler.processPaths, modules, file_pattern, compileModule)
+    processAttachments = async.apply(precompiler.processPaths, attachments, file_pattern, compileAttachment)
+
+    # Run the modules and attachments in parallel then callback to Kanso to tell it we are done, passing the design document
+    async.parallel([processModules, processAttachments],(err, results)->callback(err, doc))
+
