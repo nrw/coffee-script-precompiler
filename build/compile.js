@@ -1,5 +1,4 @@
 (function() {
-
   module.exports = {
     before: "modules",
     run: function(root, path, settings, doc, callback) {
@@ -10,8 +9,12 @@
         console.log("Coffee script precompiler must have either a modules or an attachment setting");
         return callback(null, doc);
       }
-      if (modulesPaths == null) modulesPaths = [];
-      if (attachmentsPaths == null) attachmentsPaths = [];
+      if (modulesPaths == null) {
+        modulesPaths = [];
+      }
+      if (attachmentsPaths == null) {
+        attachmentsPaths = [];
+      }
       async = require("async");
       utils = require("kanso-utils/utils");
       precompiler = require("kanso-precompiler-base");
@@ -19,18 +22,20 @@
       file_pattern = /.*\.coffee$/i;
       extension_pattern = /\.coffee$/;
       compileAttachment = function(filename, callback) {
-        var js, name;
-        console.log("Compiling attachment");
+        var js, name, rel;
+        rel = utils.relpath(filename, path);
+        console.log("Compiling attachment " + rel);
         js = coffee.compile(fs.readFileSync(filename, 'utf8'));
-        name = utils.relpath(filename, path).replace(extension_pattern, ".js");
+        name = rel.replace(extension_pattern, ".js");
         precompiler.addAttachment(doc, name, filename, js);
         return callback(null, doc);
       };
       compileModule = function(filename, callback) {
-        var js, name;
-        console.log("Compiling module");
+        var js, name, rel;
+        rel = utils.relpath(filename, path);
+        console.log("Compiling module " + rel);
         js = coffee.compile(fs.readFileSync(filename, 'utf8'));
-        name = utils.relpath(filename, path).replace(extension_pattern, "");
+        name = rel.replace(extension_pattern, "");
         precompiler.addModule(doc, name, filename, js);
         return callback(null, doc);
       };
@@ -45,5 +50,4 @@
       });
     }
   };
-
 }).call(this);

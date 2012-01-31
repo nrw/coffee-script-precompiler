@@ -25,17 +25,21 @@ module.exports =
 
     # Compile a coffeescript file and attach it to the design document      
     compileAttachment = (filename, callback) ->
-      console.log("Compiling attachment")
+      rel = utils.relpath(filename, path)
+      console.log("Compiling attachment #{rel}")
+
       js = coffee.compile(fs.readFileSync filename, 'utf8')
-      name = utils.relpath(filename, path).replace(extension_pattern, ".js")
+      name = rel.replace(extension_pattern, ".js")
       precompiler.addAttachment(doc, name, filename,js)
       callback(null, doc)
 
     # Compile a coffeescript file and add it as a CommonJS module to the design document      
     compileModule = (filename, callback) ->
-      console.log("Compiling module")
+      rel = utils.relpath(filename, path)
+      console.log("Compiling module #{rel}")
+      
       js = coffee.compile(fs.readFileSync filename, 'utf8')
-      name = utils.relpath(filename, path).replace(extension_pattern, "")
+      name = rel.replace(extension_pattern, "")
       precompiler.addModule(doc, name, filename, js)
       callback(null, doc)
 
