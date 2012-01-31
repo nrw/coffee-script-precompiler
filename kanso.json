@@ -1,10 +1,12 @@
 {
     "name": "coffee-script-precompiler",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "categories": ["build-tools"],
     "description": "Compiles CoffeeScript modules and attachments to javascript on each push",
+    "url": "https://github.com/nrw/coffee-script-precompiler/",
     "preprocessors": {
         "compile": "build/compile",
         "remove": "build/remove"
-    }
+    },
+    "dependencies": {}
 }

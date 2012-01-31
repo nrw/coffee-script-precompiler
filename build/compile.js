@@ -1,85 +1,49 @@
-var async, attachments, coffee, compile_attachment, compile_attachments, compile_coffee, compile_module, compile_modules, modules, path, spawn, utils;
-async = require("async");
-utils = require("kanso-utils/utils");
-spawn = require("child_process").spawn;
-path = require("path");
-modules = require("kanso-utils/modules");
-attachments = require("kanso-utils/attachments");
-coffee = require("coffee-script/lib/coffee-script/coffee-script");
-module.exports = {
-  before: "properties",
-  run: function(root, path, settings, doc, callback) {
-    var apply_compile_attachments, apply_compile_modules, attach_paths, module_paths;
-    if (!settings["coffee-script"]) {
-      return callback(null, doc);
+(function() {
+
+  module.exports = {
+    before: "modules",
+    run: function(root, path, settings, doc, callback) {
+      var async, attachments, attachmentsPaths, coffee, compileAttachment, compileModule, extension_pattern, file_pattern, modules, modulesPaths, precompiler, processAttachments, processModules, utils, _ref, _ref2;
+      modulesPaths = (_ref = settings["coffee-script"]) != null ? _ref["modules"] : void 0;
+      attachmentsPaths = (_ref2 = settings["coffee-script"]) != null ? _ref2["attachments"] : void 0;
+      if (!((modulesPaths != null) || (attachmentsPaths != null))) {
+        console.log("Coffee script precompiler must have either a modules or an attachment setting");
+        return callback(null, doc);
+      }
+      if (modulesPaths == null) modulesPaths = [];
+      if (attachmentsPaths == null) attachmentsPaths = [];
+      async = require("async");
+      utils = require("kanso-utils/utils");
+      precompiler = require("kanso-precompiler-base");
+      coffee = require("coffee-script");
+      file_pattern = /.*\.coffee$/i;
+      extension_pattern = /\.coffee$/;
+      compileAttachment = function(filename, callback) {
+        var js, name;
+        console.log("Compiling attachment");
+        js = coffee.compile(fs.readFileSync(filename, 'utf8'));
+        name = utils.relpath(filename, path).replace(extension_pattern, ".js");
+        precompiler.addAttachment(doc, name, filename, js);
+        return callback(null, doc);
+      };
+      compileModule = function(filename, callback) {
+        var js, name;
+        console.log("Compiling module");
+        js = coffee.compile(fs.readFileSync(filename, 'utf8'));
+        name = utils.relpath(filename, path).replace(extension_pattern, "");
+        precompiler.addModule(doc, name, filename, js);
+        return callback(null, doc);
+      };
+      console.log("Running coffee-script pre-compiler");
+      console.dir();
+      modules = precompiler.normalizePaths(settings["coffee-script"]["modules"], path);
+      attachments = precompiler.normalizePaths(attachmentsPaths, path);
+      processModules = async.apply(precompiler.processPaths, modules, file_pattern, compileModule);
+      processAttachments = async.apply(precompiler.processPaths, attachments, file_pattern, compileAttachment);
+      return async.parallel([processModules, processAttachments], function(err, results) {
+        return callback(err, doc);
+      });
     }
-    if (!settings["coffee-script"]["modules"] && !settings["coffee-script"]["attachments"]) {
-      return callback(null, doc);
-    }
-    module_paths = settings["coffee-script"]["modules"] || [];
-    if (!Array.isArray(module_paths)) {
-      module_paths = [module_paths];
-    }
-    attach_paths = settings["coffee-script"]["attachments"] || [];
-    if (!Array.isArray(attach_paths)) {
-      attach_paths = [attach_paths];
-    }
-    apply_compile_modules = async.apply(compile_modules, doc, path);
-    apply_compile_attachments = async.apply(compile_attachments, doc, path);
-    return async.parallel([async.apply(async.forEach, module_paths, apply_compile_modules), async.apply(async.forEach, attach_paths, apply_compile_attachments)], function(err) {
-      return callback(err, doc);
-    });
-  }
-};
-compile_modules = function(doc, path, paths, callback) {
-  var pattern;
-  pattern = /.*\.coffee$/i;
-  return utils.find(utils.abspath(paths, path), pattern, function(err, data) {
-    var apply_compile_module;
-    if (err) {
-      return callback(err);
-    }
-    apply_compile_module = async.apply(compile_module, doc, path);
-    return async.forEach(data, apply_compile_module, callback);
-  });
-};
-compile_module = function(doc, path, filename, callback) {
-  var name;
-  name = utils.relpath(filename, path).replace(/\.coffee$/, "");
-  return compile_coffee(path, filename, function(err, js) {
-    if (err) {
-      return callback(err);
-    }
-    modules.add(doc, name, js.toString());
-    return callback();
-  });
-};
-compile_attachments = function(doc, path, paths, callback) {
-  var pattern;
-  pattern = /.*\.coffee$/i;
-  return utils.find(utils.abspath(paths, path), pattern, function(err, data) {
-    var apply_compile_attachment;
-    if (err) {
-      return callback(err);
-    }
-    apply_compile_attachment = async.apply(compile_attachment, doc, path);
-    return async.forEach(data, apply_compile_attachment, callback);
-  });
-};
-compile_attachment = function(doc, path, filename, callback) {
-  var name;
-  name = utils.relpath(filename, path).replace(/\.coffee$/, ".js");
-  return compile_coffee(path, filename, function(err, js) {
-    if (err) {
-      return callback(err);
-    }
-    attachments.add(doc, name, name, new Buffer(js).toString("base64"));
-    return callback();
-  });
-};
-compile_coffee = function(project_path, filename, callback) {
-  var c;
-  console.log("Compiling " + utils.relpath(filename, project_path));
-  c = coffee.compile(fs.readFileSync(filename, 'utf8'));
-  return callback(null, c);
-};
+  };
+
+}).call(this);
