@@ -28,7 +28,7 @@ module.exports =
       rel = utils.relpath(filename, path)
       console.log("Compiling attachment #{rel}")
 
-      js = coffee.compile(fs.readFileSync filename, 'utf8')
+      js = coffee.compile(fs.readFileSync(filename, 'utf8'), filename: filename)
       name = rel.replace(extension_pattern, ".js")
       precompiler.addAttachment(doc, name, filename,js)
       callback(null, doc)
