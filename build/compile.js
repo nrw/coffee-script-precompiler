@@ -6,7 +6,7 @@
       modulesPaths = (_ref = settings["coffee-script"]) != null ? _ref["modules"] : void 0;
       attachmentsPaths = (_ref2 = settings["coffee-script"]) != null ? _ref2["attachments"] : void 0;
       if (!((modulesPaths != null) || (attachmentsPaths != null))) {
-        console.log("Coffee script precompiler must have either a modules or an attachment setting");
+        console.log("CoffeeScript precompiler requires either a 'modules' or an 'attachment' setting");
         return callback(null, doc);
       }
       if (modulesPaths == null) {
@@ -43,8 +43,6 @@
         precompiler.addModule(doc, name, filename, js);
         return callback(null, doc);
       };
-      console.log("Running coffee-script pre-compiler");
-      console.dir();
       modules = precompiler.normalizePaths(settings["coffee-script"]["modules"], path);
       attachments = precompiler.normalizePaths(attachmentsPaths, path);
       processModules = async.apply(precompiler.processPaths, modules, file_pattern, compileModule);
